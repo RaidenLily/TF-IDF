@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.dao.WbMessageMapper">
+<!--    <resultMap id="queryAuthorAndKeyWord" type="WbMessage">
+        <id column="id" property="id"/>
+        <result column="content" property="content"/>
+        <result column="posOrNeg" property="posOrNeg"/>
+        <result column="mark" property="mark"/>
+        <result column="score" property="score"/>
+        <result column="grade" property="grade"/>
+        <association property="authorName" javaType="WbAuthor" select="queryAuthorById" column="authorId"
+                     fetchType="lazy"/>
+        <association property="keyword" javaType="Keyword" select="queryKeywordById" column="keywordId"
+                     fetchType="lazy"/>
+    </resultMap>-->
+<!--
+
+    <select id="queryAuthorById" resultType="WbAuthor">
+        select id,authorName
+        from author
+        where id=#{id}
+    </select>
+
+    <select id="queryKeywordById" resultType="Keyword">
+        select id,keyword
+        from keywords
+        where id=#{id}
+    </select>
+-->
+
+    <select id="getAllWbMessage" resultType="wbMessage">
+        select id,content/*,posOrNeg,mark,score,grade,authorId,keywordId*/
+        from blog
+    </select>
+
+    <select id="getWbMessageById" resultType="wbMessage" parameterType="int">
+        select id,content/*,posOrNeg,mark,score,grade,authorId,keywordId*/
+        from blog
+        where id=#{id}
+    </select>
+
+<!--    <update id="modifyWbMsg" parameterType="WbMessage">
+        update blog
+        SET posOrNeg=#{posOrNeg},
+        content=#{content},
+        mark=#{mark},
+        score=#{score},
+        grade=#{grade}
+        WHERE id=#{id}
+    </update>
+
+    <delete id="batchDeleteMsg" parameterType="int">
+        delete from blog
+        where id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">#{item}</foreach>
+    </delete>
+
+    <delete id="deleteMsg" parameterType="int">
+        delete from blog
+        where id = #{id}
+    </delete>-->
+
+    <select id="getMsgCount" resultType="int">
+        select count(0)
+        from blog
+    </select>
+</mapper>

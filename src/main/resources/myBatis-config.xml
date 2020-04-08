@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <!--驼峰转换-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!--		<setting name="logImpl" value="STDOUT_LOGGING" />-->
+    </settings>
+
+    <typeAliases>
+        <!--扫描实体类-->
+        <package name="com.company.bean"/>
+    </typeAliases>
+
+    <!--	<plugins>
+            <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            &lt;!&ndash; 合理化为true，当请求的页数大于总页数时将直接使用最大的页数 &ndash;&gt;
+                <property name="reasonable" value="true" />
+            </plugin>
+        </plugins>-->
+</configuration>

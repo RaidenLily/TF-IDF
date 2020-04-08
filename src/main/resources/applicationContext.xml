@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+ http://www.springframework.org/schema/context
+ http://www.springframework.org/schema/context/spring-context-3.0.xsd
+ http://www.springframework.org/schema/aop
+ http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+ http://www.springframework.org/schema/tx
+ http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+
+    <!-- 让spring容器不扫描控制器 -->
+    <context:component-scan base-package="com">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <context:property-placeholder location="classpath:db.properties"/>
+
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${driver}"></property>
+        <property name="jdbcUrl" value="${url}"></property>
+        <property name="user" value="${user}"></property>
+        <property name="password" value="${password}"></property>
+    </bean>
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="configLocation" value="classpath:myBatis-config.xml"></property>
+        <property name="dataSource" ref="dataSource"></property>
+        <property name="mapperLocations" value="classpath:mapper/*.xml"></property>
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <!--使用下面的方式配置参数，一行配置一个 -->
+                        <value>
+                            reasonable=true
+                        </value>
+                    </property>
+                </bean>
+            </array>
+        </property>
+
+
+        <!--		<property name="plugins">
+                    <array>
+                        <bean class="com.github.pagehelper.PageInterceptor">                                                                                                          <property name="properties">                                                                                                                                          <value>  property-key=property-value </value>
+                            <property name="reasonable" value="true" />
+                        </bean>
+                    </array>
+                </property>-->
+    </bean>
+
+    <!--&lt;!&ndash; 该类里面的sqlSessionFactory会自动注入 &ndash;&gt;-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.admin.dao"></property>
+    </bean>
+
+    <!-- 事务控制配置 -->
+    <!--<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    &lt;!&ndash; sqlSessionFactory会自动注入 &ndash;&gt;
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+    <aop:config>
+    &lt;!&ndash; 第一个*指任何返回值，第一个..所有类，第二个*指所有方法，第二个 ..指的是任何参数&ndash;&gt;
+    &lt;!&ndash;切入点表达式：表示哪些方法可能要切入事务&ndash;&gt;
+        <aop:pointcut expression="execution(* com.atguigu.crud.service..*(..))" id="txPoint"/>
+        &lt;!&ndash; 事务增强 &ndash;&gt;
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPoint"/>
+    </aop:config>
+
+    &lt;!&ndash; 配置事务增强，事务如何切入 &ndash;&gt;
+    &lt;!&ndash;  当一切入之后要怎么做？ &ndash;&gt;
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+        &lt;!&ndash; 所有方法都是事务方法 &ndash;&gt;
+            <tx:method name="*"/>
+            &lt;!&ndash; 以get开始的所有方法 &ndash;&gt;
+            <tx:method name="get*" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>-->
+</beans>
