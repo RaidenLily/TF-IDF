@@ -52,5 +52,7 @@
     <orderEntry type="library" name="Maven: com.github.davidmoten:guava-mini:0.1" level="project" />
     <orderEntry type="library" name="Maven: io.reactivex:rxjava:1.2.10" level="project" />
     <orderEntry type="library" name="Maven: com.github.davidmoten:rxjava-extras:0.8.0.7" level="project" />
+    <orderEntry type="library" name="Maven: Arquillian JUnit:Release" level="project" />
+    <orderEntry type="library" name="Maven: Arquillian JUnit:1.6.0.Final" level="project" />
   </component>
 </module>

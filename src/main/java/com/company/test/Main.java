@@ -26,7 +26,6 @@ import java.util.*;
 public class Main {
 
     static private HashMap<String,IDFAndWb> b=new HashMap<>();
-    static private HashMap<String,IDFAndWb> b1=new HashMap<>();
 
     public static void main(String[] args) {
         WbMessageMapper wbMessageMapper = SQLConnect.getMapper();
@@ -40,18 +39,17 @@ public class Main {
             long startTime1 = System.currentTimeMillis();
             int msgCount = wbMessageMapper.getMsgCount();
             Iterator<WbMessage> wbMessageIterator = wbMessagesList.iterator();
-            Participle p = new Participle();
-            p.participleOne(oneWb, b);
+            Participle.participleOne(oneWb, b);
             while (wbMessageIterator.hasNext()) {
                 WbMessage wb = wbMessageIterator.next();
                 if (wb.getId() == 347) {
                     continue;
                 }
-                p.participleAll(wb, b);
+                Participle.participleAll(wb, b);
             }
-            p.countIDF(b, msgCount);
-            p.countCos(b, oneWb);
-            long endTime1 = System.currentTimeMillis(); //获取结束时间
-            System.out.println("分析时间： " + (endTime1 - startTime1) + "ms");
+        Participle.countIDF(b, msgCount);
+        Participle.countCos(b, oneWb);
+        long endTime1 = System.currentTimeMillis(); //获取结束时间
+        System.out.println("分析时间： " + (endTime1 - startTime1) + "ms");
     }
 }
