@@ -2,23 +2,49 @@ package com.company.test;
 
 import com.company.bean.IDFAndWb;
 import com.company.bean.WbMessage;
+import com.company.entiy.ResultAndWb;
 import com.company.entiy.WordInform;
 import org.ansj.domain.Result;
 import org.ansj.domain.Term;
 import org.ansj.splitWord.analysis.ToAnalysis;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class Participle {
 
-        static void participleOne(WbMessage wb, HashMap<String, IDFAndWb> b){
+    static WbMessage[] doAll(ArrayList<WbMessage> wbMessageArrayList, WbMessage wb, int sortCount) throws InterruptedException {
+        HashMap<String,IDFAndWb> b=new HashMap<>();
+        LinkedList linkedList=new LinkedList();
+        int[] lock=new int[0];
+        int msgCount=wbMessageArrayList.size();
+
+        participleOne(wb,b);
+
+        //要开更多线程可以修改其他数量，默认为4个
+        ExecutorService executors = Executors.newFixedThreadPool(4);
+        executors.submit(new SplitThread(wbMessageArrayList,linkedList));
+        executors.submit(new SplitThread(wbMessageArrayList,linkedList));
+        executors.submit(new SplitThread(wbMessageArrayList,linkedList));
+        executors.submit(new CountTFThread(linkedList,b,lock));
+
+        //必须等待所有结果运算完毕才可以
+        synchronized (lock){
+            lock.wait();
+        }
+        executors.shutdown();
+        countIDF(b, msgCount);
+        return countCos(b, wb,sortCount);
+    }
+
+        private static void participleOne(WbMessage wb, HashMap<String, IDFAndWb> b){
 
             HashMap<String,Integer> temp=new HashMap<>();
 
             Result a= ToAnalysis.parse(wb.getContent());
 
             int wordNumber=0;
-            //List wordNumber=new ArrayList<String>();
 
             for (Term tm : a) {
                 String strNs = tm.getNatureStr();//获取词性
@@ -36,10 +62,6 @@ class Participle {
                     if (strNm.length() <= 1)
                         continue;
                     wordNumber++;
-                    //wordNumber.add(strNm);
-
-/*                    WordInform wordInform=new WordInform();
-                    wordInform.setWord(strNm);*/
 
                     if (temp.containsKey(strNm)) {
                         int count = temp.get(strNm);
@@ -54,7 +76,6 @@ class Participle {
                             b.put(strNm, idfAndWb);
                         }
                     }
-                    /*b.sort((oneMsgStruct developer, oneMsgStruct compareDeveloper)->((Integer) developer.count).compareTo(compareDeveloper.count));*/
                 }
             }
             Iterator<Map.Entry<String, Integer>> iterator = temp.entrySet().iterator();
@@ -65,79 +86,22 @@ class Participle {
                 wd.setWord(entry.getKey());
 
                 wd.setDF((float) entry.getValue()/wordNumber);
-                //wd.setDF((float) entry.getValue()/wordNumber.size());
                 wordInformList.add(wd);
             }
             wb.setWordInforms(wordInformList);
         }
 
-    static void participleAll(WbMessage wbMessage, HashMap<String, IDFAndWb> b){
-
-        HashMap<String,Integer> temp=new HashMap<>();
-
-        Result a= ToAnalysis.parse(wbMessage.getContent());
-
-        int wordNumber=0;
-        //List wordNumber=new ArrayList<String>();
-
-        for (Term tm : a) {
-            String strNs = tm.getNatureStr();//获取词性
-            if (strNs.equals("null")) continue;
-            char cns = strNs.charAt(0);//取词性第一个字母
-            // cns=='t' || cns=='s' ||cns=='a' || cns=='r' || strNs.equals("mq") || cns=='q' || cns=='d' || cns=='y'  || cns=='x' ||strNs.equals("en")cns=='v' ||
-            //http://nlpchina.github.io/ansj_seg/content.html?name=词性说明
-            if (cns == 'n' || //名词、时间词、处所词
-                    cns == 'f' || //方位词、动词、形容词
-                    cns == 'b' || cns == 'z'//区别词、状态词、代词
-                //数词、数量词、副词
-            ) {//语气词、字符串x、英文
-                //介词p、连词c、助词u、叹词e、拟声词o、标点符号w、前缀h、后缀k不获取 ，数词m只获取其中mq数量词
-                String strNm = tm.getName();
-                if (strNm.length() <= 1)
-                    continue;
-                /*                System.out.println(strNm);*/
-/*                WordInform wordInform=new WordInform();
-                wordInform.setWord(strNm);*/
-                wordNumber++;
-                //wordNumber.add(strNm);
-
-                if (b.containsKey(strNm)) {
-                    if (temp.containsKey(strNm)) {
-                        int count = temp.get(strNm);
-                        count++;
-                        temp.put(strNm, count);
-                    } else {
-                        temp.put(strNm, 1);
-                        b.get(strNm).getWbMessageList().add(wbMessage);
-                    }
-                }
-            }
-        }
-
-        Iterator<Map.Entry<String, Integer>> iterator = temp.entrySet().iterator();
-        List<WordInform> wordInformList=new ArrayList<>();
-        while (iterator.hasNext()) {
-            Map.Entry<String, Integer> entry = iterator.next();
-            WordInform wd=new WordInform();
-            wd.setWord(entry.getKey());
-            wd.setDF((float) entry.getValue()/wordNumber);
-            //wd.setDF((float) entry.getValue()/wordNumber.size());
-            wordInformList.add(wd);
-        }
-/*        System.out.println(wordInformList);*/
-        wbMessage.setWordInforms(wordInformList);
-    }
-
-    static void countIDF(HashMap<String, IDFAndWb> b, int count){
+    private static void countIDF(HashMap<String, IDFAndWb> b, int count){
         for (Map.Entry<String, IDFAndWb> entry : b.entrySet()) {
             IDFAndWb idfAndWb = entry.getValue();
-            idfAndWb.setIDF((float) Math.log((float) count / (idfAndWb.getWbMessageList().size() + 1)));
-            /*            System.out.println(entry.getKey()+" "+((float) count/(idfAndWb.getWbMessageList().size()+1)));*/
+            idfAndWb.setIDF((float) Math.log((float) count / (idfAndWb.getWbMessageList().size())));
         }
     }
 
-    static void countCos(HashMap<String, IDFAndWb> b, WbMessage wbMessage){
-        WbMessage[] noWbMessage =new WbMessage[10];
+    private static WbMessage[] countCos(HashMap<String, IDFAndWb> b, WbMessage wbMessage, int sortCount){
+        if(sortCount<=0)
+            throw new RuntimeException("排序的数量必须大于0");
+        WbMessage[] noWbMessage =new WbMessage[sortCount];
         Iterator<Map.Entry<String, IDFAndWb>> iterator = b.entrySet().iterator();
         float[] oneMsg =new float[b.size()];
         for (int i=0;i<b.size();i++){
@@ -148,7 +112,7 @@ class Participle {
         }
 
         List<WbMessage> unique=new ArrayList<>(b.size()*20);
-        /*a.contains()*/
+
         while (iterator.hasNext()) {
             Map.Entry<String, IDFAndWb> entry = iterator.next();
             List<WbMessage> list = entry.getValue().getWbMessageList();
@@ -157,12 +121,8 @@ class Participle {
                     unique.add(message);
                 }
             }
-/*            a.addAll(entry.getValue().getWbMessageList());*/
         }
-/*        List<WbMessage> unique = a.stream().collect(
-                Collectors.collectingAndThen(
-                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(WbMessage::getId))), ArrayList::new)
-        );*/
+
         for (WbMessage message : unique) {
             float[] AllMsg = new float[b.size()];
             if (message.getId() == wbMessage.getId()) {
@@ -192,13 +152,12 @@ class Participle {
             message.setCos((float) (sumUp / (Math.sqrt(sumDown01) * Math.sqrt(sumDown02))));
             sort(message, noWbMessage);
         }
-        for (int t=0;t<10;t++){
-            System.out.println("id:"+noWbMessage[t].getId()+" "+"cos:"+noWbMessage[t].getCos());
-        }
+
+        return noWbMessage;
     }
 
     private static void sort(WbMessage wbMessage,WbMessage[] noWbMessage){
-            if (noWbMessage[9]==null){
+            if (noWbMessage[noWbMessage.length-1]==null){
                 for (int i=0;i<noWbMessage.length;i++){
                     if (noWbMessage[i]==null){
                         noWbMessage[i]=wbMessage;
@@ -232,12 +191,140 @@ class Participle {
                 }
             }
     }
-/*
-    private static class CountThread implements Runnable{
+    private static class SplitThread implements Runnable {
+
+        private ArrayList<WbMessage> wbMessageArrayList;
+        private WbMessage wbMessage;
+        private LinkedList list;
+
+        SplitThread(ArrayList<WbMessage> wbMessageArrayList, LinkedList list) {
+            this.wbMessageArrayList = wbMessageArrayList;
+            this.list = list;
+        }
 
         @Override
         public void run() {
-
+            while (true) {
+                synchronized (wbMessageArrayList) {
+                    if(wbMessageArrayList.size()==0){
+                        ResultAndWb rs = new ResultAndWb(true);
+                        synchronized (list){
+                            list.add(rs);
+                            list.notifyAll();
+                        }break;
+                    }
+                    wbMessage = wbMessageArrayList.get(wbMessageArrayList.size() - 1);
+                    wbMessageArrayList.remove(wbMessageArrayList.size() - 1);
+                }
+                Result a = ToAnalysis.parse(wbMessage.getContent());
+                ResultAndWb resultAndWb = new ResultAndWb(a, wbMessage,false);
+                synchronized (list) {
+                    while (list.size() == 50) {
+                        try {
+                            list.notifyAll();
+                            list.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    list.add(resultAndWb);
+                    list.notifyAll();
+                }
+            }
         }
-    }*/
+    }
+
+    private static class CountTFThread implements Runnable {
+
+        private LinkedList list;
+        private Result a;
+        private ResultAndWb resultAndWb;
+        private WbMessage wbMessage;
+        private HashMap<String, IDFAndWb> b;
+        private int t = 1;
+        private int[] lock;
+
+        CountTFThread(LinkedList list, HashMap<String, IDFAndWb> b, int[] lock) {
+            this.list = list;
+            this.b = b;
+            this.lock = lock;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                synchronized (list) {
+                    while (list.isEmpty()) {
+                        try {
+                            list.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    resultAndWb = (ResultAndWb) list.get(0);
+                    if (resultAndWb.isEnd()) {
+                        list.remove(0);
+                        if (t++ == 3) {
+                            synchronized (lock) {
+                                lock.notify();
+                            }
+                            break;
+                        }
+                        continue;
+                    } else {
+                        list.remove(0);
+                        list.notify();
+                    }
+                }
+
+                a = resultAndWb.getResult();
+                wbMessage = resultAndWb.getWbMessage();
+
+                int wordNumber = 0;
+
+                HashMap<String, Integer> temp = new HashMap<>();
+
+                for (Term tm : a) {
+                    String strNs = tm.getNatureStr();//获取词性
+                    if (strNs.equals("null")) continue;
+                    char cns = strNs.charAt(0);//取词性第一个字母
+                    // cns=='t' || cns=='s' ||cns=='a' || cns=='r' || strNs.equals("mq") || cns=='q' || cns=='d' || cns=='y'  || cns=='x' ||strNs.equals("en")cns=='v' ||
+                    //http://nlpchina.github.io/ansj_seg/content.html?name=词性说明
+                    if (cns == 'n' || //名词、时间词、处所词
+                            cns == 'f' || //方位词、动词、形容词
+                            cns == 'b' || cns == 'z'//区别词、状态词、代词
+                        //数词、数量词、副词
+                    ) {//语气词、字符串x、英文
+                        //介词p、连词c、助词u、叹词e、拟声词o、标点符号w、前缀h、后缀k不获取 ，数词m只获取其中mq数量词
+                        String strNm = tm.getName();
+                        if (strNm.length() <= 1)
+                            continue;
+                        wordNumber++;
+
+                        if (b.containsKey(strNm)) {
+                            if (temp.containsKey(strNm)) {
+                                int count = temp.get(strNm);
+                                count++;
+                                temp.put(strNm, count);
+                            } else {
+                                temp.put(strNm, 1);
+                                b.get(strNm).getWbMessageList().add(wbMessage);
+                            }
+                        }
+                    }
+                }
+
+                Iterator<Map.Entry<String, Integer>> iterator = temp.entrySet().iterator();
+                List<WordInform> wordInformList = new ArrayList<>();
+                while (iterator.hasNext()) {
+                    Map.Entry<String, Integer> entry = iterator.next();
+                    WordInform wd = new WordInform();
+                    wd.setWord(entry.getKey());
+                    wd.setDF((float) entry.getValue() / wordNumber);
+                    wordInformList.add(wd);
+                }
+                wbMessage.setWordInforms(wordInformList);
+            }
+        }
+    }
 }

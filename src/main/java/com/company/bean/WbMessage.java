@@ -8,13 +8,7 @@ import java.util.List;
 @Data
 public class WbMessage{
     private int id;
-/*    private WbAuthor authorName;
-    private Keyword keyword;*/
     private String content;
-/*    private Integer posOrNeg;
-    private double mark;
-    private double score;
-    private Integer grade;*/
     private float cos;
 
     public String toString(){

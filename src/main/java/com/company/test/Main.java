@@ -22,34 +22,39 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
 
-
+//测试
 public class Main {
 
-    static private HashMap<String,IDFAndWb> b=new HashMap<>();
+    public static void main(String[] args) throws InterruptedException {
 
-    public static void main(String[] args) {
         WbMessageMapper wbMessageMapper = SQLConnect.getMapper();
-        //从数据库中获取目标关键字的所有数据
+
+        //预先加载分词插件，不然很慢
+        ToAnalysis.parse("哈哈");
+
+        //从数据库中获取微博数据
         long startTime=System.currentTimeMillis();
-        List<WbMessage> wbMessagesList = wbMessageMapper.getAllWbMessage();
+        ArrayList<WbMessage> wbMessagesList = (ArrayList<WbMessage>) wbMessageMapper.getAllWbMessage();
+
+        //目标微博
         WbMessage oneWb=wbMessageMapper.getWbMessageById(347);
-        long endTime=System.currentTimeMillis(); //获取结束时间
+        long endTime=System.currentTimeMillis();
+
+        //输出从数据库获取数据的时间
         System.out.println("获取数据时间： "+(endTime-startTime)+"ms");
 
-            long startTime1 = System.currentTimeMillis();
-            int msgCount = wbMessageMapper.getMsgCount();
-            Iterator<WbMessage> wbMessageIterator = wbMessagesList.iterator();
-            Participle.participleOne(oneWb, b);
-            while (wbMessageIterator.hasNext()) {
-                WbMessage wb = wbMessageIterator.next();
-                if (wb.getId() == 347) {
-                    continue;
-                }
-                Participle.participleAll(wb, b);
-            }
-        Participle.countIDF(b, msgCount);
-        Participle.countCos(b, oneWb);
-        long endTime1 = System.currentTimeMillis(); //获取结束时间
+        long startTime1 = System.currentTimeMillis();
+
+        //进行相似分析分析
+        WbMessage[] noWbMessage = Participle.doAll(wbMessagesList,oneWb,5);
+
+        long endTime1 = System.currentTimeMillis();
+
+        //输出分析的时间
         System.out.println("分析时间： " + (endTime1 - startTime1) + "ms");
+
+        for (int t=0;t<noWbMessage.length;t++){
+            System.out.println("id:"+noWbMessage[t]);
+        }
     }
 }

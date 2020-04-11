@@ -8,9 +8,4 @@ import java.util.List;
 public class IDFAndWb {
     private float IDF;
     private List<WbMessage> wbMessageList;
-
-    @Override
-    public String toString(){
-        return wbMessageList.size()+ " "+ IDF;
-    }
 }
