@@ -12,14 +12,15 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-class Participle {
+public class Participle {
 
-    static WbMessage[] doAll(ArrayList<WbMessage> wbMessageArrayList, WbMessage wb, int sortCount) throws InterruptedException {
+    public static WbMessage[] doAll(ArrayList<WbMessage> wbMessageArrayList, WbMessage wb, int sortCount) throws InterruptedException {
         HashMap<String,IDFAndWb> b=new HashMap<>();
         LinkedList linkedList=new LinkedList();
         int[] lock=new int[0];
         int msgCount=wbMessageArrayList.size();
 
+        //首先对目标微博进行解析处理
         participleOne(wb,b);
 
         //要开更多线程可以修改其他数量，默认为4个
@@ -29,7 +30,7 @@ class Participle {
         executors.submit(new SplitThread(wbMessageArrayList,linkedList));
         executors.submit(new CountTFThread(linkedList,b,lock));
 
-        //必须等待所有结果运算完毕才可以
+        //必须等待所有线程运算完毕
         synchronized (lock){
             lock.wait();
         }
@@ -99,9 +100,11 @@ class Participle {
     }
 
     private static WbMessage[] countCos(HashMap<String, IDFAndWb> b, WbMessage wbMessage, int sortCount){
+
         if(sortCount<=0)
             throw new RuntimeException("排序的数量必须大于0");
-        WbMessage[] noWbMessage =new WbMessage[sortCount];
+
+        int aimId=wbMessage.getId();
         Iterator<Map.Entry<String, IDFAndWb>> iterator = b.entrySet().iterator();
         float[] oneMsg =new float[b.size()];
         for (int i=0;i<b.size();i++){
@@ -117,11 +120,17 @@ class Participle {
             Map.Entry<String, IDFAndWb> entry = iterator.next();
             List<WbMessage> list = entry.getValue().getWbMessageList();
             for (WbMessage message : list) {
-                if (!unique.contains(message)) {
+                if (!unique.contains(message) && message.getId()!=aimId) {
                     unique.add(message);
                 }
             }
         }
+
+        if(unique.size()<sortCount){
+            sortCount=unique.size();
+        }
+
+        WbMessage[] noWbMessage =new WbMessage[sortCount];
 
         for (WbMessage message : unique) {
             float[] AllMsg = new float[b.size()];
@@ -264,6 +273,8 @@ class Participle {
                     resultAndWb = (ResultAndWb) list.get(0);
                     if (resultAndWb.isEnd()) {
                         list.remove(0);
+
+                        //若修改了线程数量，这里也要修改成SplitThread对应线程数
                         if (t++ == 3) {
                             synchronized (lock) {
                                 lock.notify();
