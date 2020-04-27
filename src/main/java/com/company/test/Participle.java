@@ -14,6 +14,15 @@ import java.util.concurrent.Executors;
 
 public class Participle {
 
+    /**
+     *
+     * 功能描述: 
+     *
+     * @param: wbMessageArrayList 要进行分析的所有微博，wb 目标微博，sortCount 最后排序要显示多少微博
+     * @return: 一个排好序的微博列表
+     * @auther: Li
+     * @date: 4/27/2020 8:48 AM
+     */
     public static WbMessage[] doAll(ArrayList<WbMessage> wbMessageArrayList, WbMessage wb, int sortCount) throws InterruptedException {
         HashMap<String,IDFAndWb> b=new HashMap<>();
         LinkedList linkedList=new LinkedList();
@@ -39,6 +48,15 @@ public class Participle {
         return countCos(b, wb,sortCount);
     }
 
+    /**
+     *
+     * 功能描述:
+     *
+     * @param: wb 目标微博，b 目标微博出现的词语
+     * @return:
+     * @auther: Li
+     * @date: 4/27/2020 8:50 AM
+     */
         private static void participleOne(WbMessage wb, HashMap<String, IDFAndWb> b){
 
             HashMap<String,Integer> temp=new HashMap<>();
@@ -165,6 +183,9 @@ public class Participle {
         return noWbMessage;
     }
 
+    /**
+     * 使用局部排序，对前sortCount相似度最高的微博进行排序
+     */
     private static void sort(WbMessage wbMessage,WbMessage[] noWbMessage){
             if (noWbMessage[noWbMessage.length-1]==null){
                 for (int i=0;i<noWbMessage.length;i++){
@@ -200,6 +221,10 @@ public class Participle {
                 }
             }
     }
+
+    /**
+     * 分词线程
+     */
     private static class SplitThread implements Runnable {
 
         private ArrayList<WbMessage> wbMessageArrayList;
@@ -243,6 +268,9 @@ public class Participle {
         }
     }
 
+    /**
+     * 计算线程
+     */
     private static class CountTFThread implements Runnable {
 
         private LinkedList list;
