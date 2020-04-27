@@ -1,3 +1,19 @@
-# TF-IDF
-大标题  
-====  
+TF-IDF 
+文本相似度计算Java版  
+使用多线程进行分析计算，速度更快，默认使用四个线程。  
+针对微博内容文本相似，当然还可以用于其他文本相似。
+
+使用
+==
+主要类是Participle类，使用为test包下的Participle类的静态方法doAll，根据注释要求丢参数即可
+入参主要为目标微博和所有微博  
+微博格式为：  
+微博id  
+微博文本内容  
+
+返回
+==
+这里对386条微博进行分析  
+CPU为i5-7400
+
+![](https://github.com/RaidenLily/TF-IDF/blob/master/result.jpg)
