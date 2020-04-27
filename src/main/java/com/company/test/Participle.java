@@ -32,7 +32,7 @@ public class Participle {
         //首先对目标微博进行解析处理
         participleOne(wb,b);
 
-        //要开更多线程可以修改其他数量，默认为4个
+        //要开更多线程还要修改其他数量，默认为4个，建议不要修改
         ExecutorService executors = Executors.newFixedThreadPool(4);
         executors.submit(new SplitThread(wbMessageArrayList,linkedList));
         executors.submit(new SplitThread(wbMessageArrayList,linkedList));
