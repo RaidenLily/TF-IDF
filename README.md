@@ -11,12 +11,12 @@ TF-IDF
 微博id  
 微博文本内容  
   
-若要测试，可以使用blog.sql文件进行数据导入  
+若要测试，可以使用blog.sql文件进行数据导入，数据库配置文件可能要按自己情况进行修改  
 我这里是使用MySQL中存储数据的。
 
 返回
 ==
 这里对386条微博进行分析  
-CPU为i5-7400
+测试机器CPU为i5-7400
 
 ![](https://github.com/RaidenLily/TF-IDF/blob/master/result.jpg)
