@@ -20,3 +20,6 @@ TF-IDF
 测试机器CPU为i5-7400
 
 ![](https://github.com/RaidenLily/TF-IDF/blob/master/result.jpg)
+
+如果对你有帮助，请给颗星星，谢谢！
+==
